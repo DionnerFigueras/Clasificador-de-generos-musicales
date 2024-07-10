@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predicción de Género Musical</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"></script>
+</head>
+
+<body>
+
+
+    <header>
+        <h1>Clasificador de Géneros Musicales</h1>
+    </header>
+
+    <div class="container">
+        <h2>Sube una canción</h2>
+
+
+        <input type="file" id="audioInput" accept="audio/*" style="display: none;">
+
+        <button id="customButton">Seleccionar un archivo de audio</button>
+
+        <p id="selectedFile"></p>
+
+        <button id="uploadButton">Predecir género</button>
+
+        <div id="prediction"></div>
+    </div>
+
+
+    <footer>
+        Proyecto Desarrollado Por: <br>
+        Alejandro Caraballo. 30.040.746 <br>
+        Andrea Montero. <br>
+        Dionner Figueras. 28.561.983 <br>
+        Eliezer Barrios. <br>
+    </footer>
+
+    <script src="/scripts/mostrarMusica.js"></script>
+</body>
+
+</html>
