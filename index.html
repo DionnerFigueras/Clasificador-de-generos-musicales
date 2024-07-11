@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Predicción de Género Musical</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
 </head>
 
 <body>
@@ -40,7 +41,16 @@
         Eliezer Barrios. <br>
     </footer>
 
-    <script src="/scripts/mostrarMusica.js"></script>
+
+    <script>
+        (async () => {
+            console.log('Cargando el modelo...');
+            const modelo = await tf.loadLayersModel('modelo/model.json?v=' + Date.now());
+            console.log('Modelo cargado exitosamente!');
+        })();
+    </script>
+
+    <!-- <script src="/scripts/mostrarMusica.js"></script> -->
 </body>
 
 </html>

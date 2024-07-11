@@ -41,31 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     ''
                 )
             );
-            /* 
-                        // Enviar a la API
-                        fetch('/api/predict', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ audio: base64Audio }),
-                        })
-                            .then((response) => {
-                                if (!response.ok) {
-                                    // Si hay un error del lado del servidor
-                                    throw new Error(`Error HTTP: ${response.status} ${response.statusText}`);
-                                }
-                                return response.json(); // Parsear la respuesta JSON
-                            })
-                            .then((data) => {
-                                // Éxito: Mostrar alerta con el género
-                                alert(`¡Predicción exitosa! Género: ${data.genre}`);
-                                predictionDiv.textContent = `Género: ${data.genre}`; // También mostrar en el div
-                            })
-                            .catch((error) => {
-                                // Error: Mostrar alerta con el mensaje de error
-                                alert(`Error en la predicción: ${error.message}`);
-                                console.error('Error:', error);
-                                predictionDiv.textContent = 'Error en la predicción';
-                            }); */
         };
 
         reader.readAsArrayBuffer(file);
@@ -108,52 +83,62 @@ async function procesarAudio(audioFile) {
     return mfccsScaled;
 }
 
+
 // Carga del modelo
 let modelo;
 
-async function loadModel() {
-  modelo = await tf.loadLayersModel('/modelo/model.json');
-  // Modificar la definición del modelo para agregar inputShape
-  const newModel = tf.sequential();
-  newModel.add(tf.layers.dense({ units: 128, activation: 'relu', inputShape: [58] }));
-  newModel.add(tf.layers.dropout({ rate: 0.3 }));
-  newModel.add(tf.layers.dense({ units: 32, activation: 'relu' }));
-  newModel.add(tf.layers.dense({ units: 10, activation: 'softmax' }));
-  modelo = newModel;
+async function cargarModelo() {
+    modelo = await tf.loadLayersModel('/modelo/model.json');
+
+/*     // Agregar una capa de entrada explícita
+    const inputLayer = tf.layers.inputLayer({ inputShape: [58] });
+    modelo.layers.unshift(inputLayer);
+
+    // Modificar la arquitectura del modelo para agregar una capa de entrada
+    modelo = tf.sequential();
+    modelo.add(tf.layers.dense({ units: 128, activation: 'relu', inputShape: [58] }));
+    modelo.add(modelo.layers[1]); // Agregar las capas restantes del modelo original
+    modelo.add(modelo.layers[2]);
+    modelo.add(modelo.layers[3]);
+
+    // Compilar el modelo
+    modelo.compile({
+        optimizer: 'adam',
+        loss: 'categoricalCrossentropy',
+        metrics: ['accuracy'],
+    }); */
 }
 
 
 async function predecirGenero(audioFile) {
     try {
-/*         console.log('Cargando el modelo')
-        modelo = await tf.loadLayersModel('/modelo/model.json');
-        console.log('Modelo Cargado')
-        const mfccsScaled = await procesarAudio(audioFile);
-
-        // Realizar la predicción
-        const inputTensor = tf.tensor2d(mfccsScaled, [1, 58]);
-        const outputTensor = modelo.predict(inputTensor);
-        const probabilities = outputTensor.dataSync();
-
-        // Obtener el índice de la clase con la mayor probabilidad
-        const genreIndex = probabilities.indexOf(Math.max(...probabilities));
-
-        // Devolver el género predicho */
-        const mfccs = extractMFCCs(audioBuffer);
+        const mfccs = await procesarAudio(audioFile);
         const inputTensor = tf.tensor2d(mfccs, [1, 58]);
-        const outputTensor = model.predict(inputTensor);
+        const outputTensor = modelo.predict(inputTensor);
         return outputTensor;
-        // return genreIndex;
     } catch (error) {
         alert(`Error al predecir el género: ${error.message}`);
     }
 }
+
+const le = {
+    labels: ['rock', 'pop', 'jazz', 'classical', 'hiphop', 'electronic', 'folk', 'R&B', 'metal', 'country'],
+    inverseTransform: (indices) => {
+        return indices.map((index) => this.labels[index]);
+    },
+    transform: (labels) => {
+        return labels.map((label) => this.labels.indexOf(label));
+    },
+};
 
 // Agregar evento de click al botón de predicción
 document.getElementById('uploadButton').addEventListener('click', async () => {
     try {
         const audioInput = document.getElementById('audioInput');
         const audioFile = audioInput.files[0];
+        console.log("cargando el modelo");
+        await cargarModelo();
+        console.log("Modelo cargado");
         const genreIndex = await predecirGenero(audioFile);
         const genreLabel = le.inverseTransform([genreIndex])[0];
         document.getElementById('prediction').innerHTML = `Predicción del género: ${genreLabel}`;

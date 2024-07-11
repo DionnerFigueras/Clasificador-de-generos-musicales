@@ -80,7 +80,10 @@ async function procesarAudio(audioFile) {
     const scaler = new StandardScaler();
     const mfccsScaled = scaler.fitTransform(mfccsArray);
 
-    return mfccsScaled;
+    // Ajustar la forma del array para que sea [1, 58]
+    const inputTensor = tf.tensor(mfccsScaled).reshape([1, 58]);
+
+    return inputTensor; // Retornar el tensor con la forma correcta
 }
 
 
@@ -89,33 +92,17 @@ let modelo;
 
 async function cargarModelo() {
     modelo = await tf.loadLayersModel('/modelo/model.json');
-
-    // Agregar una capa de entrada explícita
-    const inputLayer = tf.layers.inputLayer({ inputShape: [58] });
-    modelo.layers.unshift(inputLayer);
-
-    // Modificar la arquitectura del modelo para agregar una capa de entrada
-    modelo = tf.sequential();
-    modelo.add(tf.layers.dense({ units: 128, activation: 'relu', inputShape: [58] }));
-    modelo.add(modelo.layers[1]); // Agregar las capas restantes del modelo original
-    modelo.add(modelo.layers[2]);
-    modelo.add(modelo.layers[3]);
-
-    // Compilar el modelo
-    modelo.compile({
-        optimizer: 'adam',
-        loss: 'categoricalCrossentropy',
-        metrics: ['accuracy'],
-    });
 }
 
 
 async function predecirGenero(audioFile) {
     try {
         const mfccs = await procesarAudio(audioFile);
-        const inputTensor = tf.tensor2d(mfccs, [1, 58]);
+        const inputTensor = tf.tensor2d(mfccs, [, 128]);
         const outputTensor = modelo.predict(inputTensor);
-        return outputTensor;
+        const prediction = outputTensor.arraySync()[0];
+        const genreIndex = prediction.indexOf(Math.max(...prediction));
+        return genreIndex;
     } catch (error) {
         alert(`Error al predecir el género: ${error.message}`);
     }
